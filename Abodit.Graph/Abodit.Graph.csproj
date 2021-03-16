@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Authors>Ian Mercer</Authors>
+    <Company>Signswift LLC</Company>
+    <Description>A Graph implementation for mutable and immutable graphs. Aims to be fast at forward and backward traversal over links. Includes some graph algorithms for traversals, path finding, topological sort and page rank.</Description>
+    <Copyright>Ian Mercer 2019-2021</Copyright>
+    <Nullable>enable</Nullable>
+    <LangVersion>8.0</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="5.0.0" />
+  </ItemGroup>
+</Project>
