@@ -39,7 +39,7 @@ Why create another graph library?
 6. Support for Dotgraph rendering of graphs.
 
 
-Where's the nuget package?
+Nuget
 ----
-I haven't published one yet, but if you ping me on Twitter I will.
 
+Available on nuget as https://www.nuget.org/packages/Abodit.Graph
