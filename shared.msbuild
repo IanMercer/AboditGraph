@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <PropertyGroup>
+    <Authors>Ian Mercer</Authors>
+    <Company>SignSwift LLC</Company>
+    <Product>Abodit.Graph</Product>
+    <Copyright>Signswift LLC 2005-2021</Copyright>
+    <AssemblyTrademark></AssemblyTrademark>
+    <AssemblyCulture>EN-US</AssemblyCulture>
+    <Version>2.9.99.8888</Version>
+    <AssemblyVersion>2.9</AssemblyVersion>
+    <FileVersion>2.9.99.8888</FileVersion>
+    <InformationalVersion>2.9.99.8888</InformationalVersion>
+    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+  </PropertyGroup>
+
+  <!-- Build XML documentation for all combinations of target framework and configuration -->
+  <PropertyGroup>
+    <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="LICENSE.txt" Pack="true" PackagePath="" />
+  </ItemGroup>
+</Project>

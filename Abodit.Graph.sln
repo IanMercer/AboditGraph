@@ -3,13 +3,14 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30804.86
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Abodit.Graph", "Abodit.Graph.csproj", "{AA4C3AE1-6BBD-4B5D-931D-C33AEC4B0A52}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Abodit.Graph", "Abodit.Graph\Abodit.Graph.csproj", "{AA4C3AE1-6BBD-4B5D-931D-C33AEC4B0A52}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Abodit.Graph.Tests", "..\Abodit.Graph.Tests\Abodit.Graph.Tests.csproj", "{9CEF8E21-A972-46D9-9F63-AED6FDCE29D9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Abodit.Graph.Tests", "Abodit.Graph.Tests\Abodit.Graph.Tests.csproj", "{9CEF8E21-A972-46D9-9F63-AED6FDCE29D9}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{BFC2A097-D26D-4E09-8636-F3FA7021596B}"
 	ProjectSection(SolutionItems) = preProject
 		..\README.md = ..\README.md
+		shared.msbuild = shared.msbuild
 	EndProjectSection
 EndProject
 Global

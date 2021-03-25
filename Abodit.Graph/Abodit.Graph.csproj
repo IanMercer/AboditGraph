@@ -11,6 +11,18 @@
     <LangVersion>8.0</LangVersion>
   </PropertyGroup>
 
+  <!-- This must come after the above so that it overwrites it -->
+  <Import Project="$(MSBuildThisFileDirectory)\..\Shared.msbuild" />
+
+  <!-- Embed PBD files until symbol server support is added -->
+  <PropertyGroup>
+    <!-- Condition="'$(CI_EMBED_SYMBOLS)' == 'true'"> -->
+    <AllowedOutputExtensionsInPackageBuildOutputFolder>
+      $(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb
+    </AllowedOutputExtensionsInPackageBuildOutputFolder>
+    <PackageProjectUrl>https://github.com/IanMercer/AboditGraph</PackageProjectUrl>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="5.0.0" />
   </ItemGroup>
