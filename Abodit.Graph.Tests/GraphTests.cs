@@ -82,6 +82,22 @@ namespace AboditUnitsTest
         }
 
         [TestMethod]
+        public void CanFollowEdge()
+        {
+            var follow = A.Follow(a, Relation.RDFSType);
+            follow.Count().Should().Be(2);
+            follow.Select(e => e.End).Should().BeEquivalentTo(new[] { b, c });
+        }
+
+        [TestMethod]
+        public void CanFindSiblings()
+        {
+            var siblings = A.Siblings(b, Relation.RDFSType);
+            siblings.Count().Should().Be(1);
+            siblings.Should().BeEquivalentTo(new[] { c });
+        }
+
+        [TestMethod]
         public void UnionWithSelfIsIdentity()
         {
             var AwithA = A.Union(A);

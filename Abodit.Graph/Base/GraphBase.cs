@@ -181,17 +181,19 @@ namespace Abodit.Graph.Base
         }
 
         /// <summary>
-        /// Find all the outgoing edges from a vertex with a given predicate (or null)
+        /// Find all the outgoing edges from a vertex that match at least one of the listed predicates
         /// </summary>
         /// <remarks>
         /// A single step in the graph away from a node
         /// </remarks>
-        public IEnumerable<Edge> Follow(TNode start, TRelation predicate)
+        public IEnumerable<Edge> Follow(TNode start, params TRelation[] predicates)
         {
+            int safetyLimit = Limit;
             if (StartIndexedEdges.TryGetValue(start, out PredicateNext? startLink))
             {
-                foreach (var pn in startLink!.Where(pn => (predicate is null) || pn.Predicate.Equals(predicate)))
+                foreach (var pn in startLink!.Where(pn => (!predicates.Any()) || predicates.Contains(pn.Predicate)))
                 {
+                    if (safetyLimit-- < 0) throw new Exception($"Too many edges, limit was {safetyLimit}");
                     yield return new Edge(start, pn.Predicate, pn.End);
                 }
             }
@@ -215,6 +217,34 @@ namespace Abodit.Graph.Base
         }
 
         /// <summary>
+        /// Find all the siblings of a node by following one or more predicates backwards
+        /// to find parent nodes and then forwards to find children at the same level
+        /// </summary>
+        public IEnumerable<TNode> Siblings(TNode child, params TRelation[] predicates)
+        {
+            HashSet<TNode> seen = new HashSet<TNode>();
+            if (EndIndexedEdges.TryGetValue(child, out PredicatePrevious? endLink))
+            {
+                int safetyLimit = Limit;
+                foreach (var priorEdge in endLink!)
+                {
+                    if (StartIndexedEdges.TryGetValue(priorEdge.Start, out PredicateNext? startLink))  // always
+                    {
+                        foreach (var pn2 in startLink!.Where(pn => (!predicates.Any()) || predicates.Contains(pn.Predicate)))
+                        {
+                            if (safetyLimit-- < 0) throw new Exception($"Too many edges, limit was {safetyLimit}");
+                            if (pn2.End.Equals(child)) continue;  // not a sibling of self
+
+                            yield return pn2.End;
+                        }
+
+                        if (safetyLimit-- < 0) throw new Exception($"Too many edges, limit was {safetyLimit}");
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// Find all the outgoing edges from a vertex
         /// </summary>
         public IEnumerable<Edge> Back(TNode end)
@@ -231,12 +261,14 @@ namespace Abodit.Graph.Base
         /// <summary>
         /// Find all the outgoing edges from a vertex with a given predicate (or null)
         /// </summary>
-        public IEnumerable<Edge> Back(TNode end, TRelation predicate)
+        public IEnumerable<Edge> Back(TNode end, params TRelation[] predicates)
         {
             if (EndIndexedEdges.TryGetValue(end, out PredicatePrevious? endLink))
             {
-                foreach (var pn in endLink!.Where(pn => (predicate is null) || pn.Predicate.Equals(predicate)))
+                int safetyLimit = Limit;
+                foreach (var pn in endLink!.Where(pn => (!predicates.Any()) || predicates.Contains(pn.Predicate)))
                 {
+                    if (safetyLimit-- < 0) throw new Exception($"Too many edges, limit was {safetyLimit}");
                     yield return new Edge(pn.Start, pn.Predicate, end);
                 }
             }
