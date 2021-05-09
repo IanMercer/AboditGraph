@@ -69,11 +69,17 @@ namespace Abodit.Graph.Base
                 return $"{Start} -- {Predicate} --> {End}";
             }
 
+            /// <summary>
+            /// Equals
+            /// </summary>
             public static bool operator ==(GraphBase<TNode, TRelation>.Edge left, GraphBase<TNode, TRelation>.Edge right)
             {
                 return left.Equals(right);
             }
 
+            /// <summary>
+            /// Not equals
+            /// </summary>
             public static bool operator !=(GraphBase<TNode, TRelation>.Edge left, GraphBase<TNode, TRelation>.Edge right)
             {
                 return !(left == right);
