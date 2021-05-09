@@ -56,7 +56,11 @@ namespace Abodit.Graph.Base
             /// <inheritdoc />
             public override int GetHashCode()
             {
+#if NET50
                 return HashCode.Combine(this.Start, this.Predicate, this.End);
+#else
+                return this.Start.GetHashCode() + this.Predicate.GetHashCode() + this.End.GetHashCode();
+#endif
             }
 
             /// <inheritdoc />
