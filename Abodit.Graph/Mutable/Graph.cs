@@ -350,9 +350,11 @@ namespace Abodit.Mutable
         }
 
         /// <summary>
-        /// Find all the outgoing edges from a vertex with a given predicate (or null) and keep following edges of that type
-        /// match only nodes of type T. Return the results as a tree (can be flattened using SelectMany).
+        /// Find all the outgoing edges from a node, optionally filtered to a set of predicates
+        /// match only nodes of type T along the way.
         /// </summary>
+        /// <returns>The results as a tree (can be flattened using SelectMany). Edges are the predicates
+        /// that were used during the search which is only a subset of all edges between these nodes.</returns>
         public Graph<T, TRelation> Successors<T>(TNode start2, params TRelation[] predicates)
             where T : TNode, IEquatable<T>
         {
@@ -364,9 +366,11 @@ namespace Abodit.Mutable
         }
 
         /// <summary>
-        /// Find all the outgoing edges from a list of node with a given predicate (or null) and keep following edges of that type
-        /// match only nodes of type T. Return the results as a tree (can be flattened using SelectMany).
+        /// Find all the outgoing edges from a list of nodes, optionally filtered to a set of predicates.
+        /// Match only nodes of type T along the way.
         /// </summary>
+        /// <returns>The results as a tree (can be flattened using SelectMany). Edges are the predicates
+        /// that were used during the search which is only a subset of all edges between these nodes.</returns>
         public Graph<T, TRelation> Successors<T>(IEnumerable<TNode> starts, params TRelation[] predicates)
             where T : TNode, IEquatable<T>
         {
@@ -405,9 +409,11 @@ namespace Abodit.Mutable
         }
 
         /// <summary>
-        /// Find all the incoming edges from a vertex with a given predicate (or null) and keep following edges of that type
-        /// match only nodes of type T. Return the results as a tree (can be flattened using SelectMany).
+        /// Find all the incoming edges from a vertex using a given set of predicates (or none)
+        /// and keep following edges of that type match only nodes of type T.
         /// </summary>
+        /// <returns>The results as a tree (can be flattened using SelectMany). Edges are the predicates
+        /// that were used during the search which is only a subset of all edges between these nodes.</returns>
         public Graph<T, TRelation> Predecessors<T>(TNode start, params TRelation[] predicates)
             where T : TNode, IEquatable<T>
         {
@@ -417,9 +423,11 @@ namespace Abodit.Mutable
         }
 
         /// <summary>
-        /// Find all the incoming edges from a list of nodes with a given predicate (or null) and keep following edges of that type
-        /// match only nodes of type T. Return the results as a tree (can be flattened using SelectMany).
+        /// Find all the incoming edges from a list of nodes using a given set of predicates (or empty for all)
+        /// and keep following edges of those types, match only nodes of type T.
         /// </summary>
+        /// <returns>The results as a tree (can be flattened using SelectMany). Edges are the predicates
+        /// that were used during the search which is only a subset of all edges between these nodes.</returns>
         public Graph<T, TRelation> Predecessors<T>(IEnumerable<TNode> starts, params TRelation[] predicates)
             where T : TNode, IEquatable<T>
         {
