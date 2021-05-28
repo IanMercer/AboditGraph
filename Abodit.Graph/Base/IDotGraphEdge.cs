@@ -10,4 +10,37 @@
         /// </summary>
         string DotLabel { get; }
     }
+
+    /// <summary>
+    /// An edge can be styled with a dot graph style, e.g. dotted
+    /// </summary>
+    public interface IDotGraphEdgeStyle
+    {
+        /// <summary>
+        /// Gets the style for the edge
+        /// </summary>
+        string Style { get; }
+    }
+
+    /// <summary>
+    /// An edge can be colored, e.g. "red" or "#E04040"
+    /// </summary>
+    public interface IDotGraphEdgeColor
+    {
+        /// <summary>
+        /// Gets the color for the edge
+        /// </summary>
+        string Color { get; }
+    }
+
+    /// <summary>
+    /// An edge can have a thickness
+    /// </summary>
+    public interface IDotGraphEdgeThickness
+    {
+        /// <summary>
+        /// Gets the thickness for the edge
+        /// </summary>
+        int Thickness { get; }
+    }
 }

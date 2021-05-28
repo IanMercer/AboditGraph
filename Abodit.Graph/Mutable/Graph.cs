@@ -610,15 +610,21 @@ namespace Abodit.Mutable
             //double hue = 1.0 / node.Id;
 
             //// Rainbow by generation
-            string color = successor is IDotGraphNode dgn ? colors[(dgn.Id / idspercolor) % colors.Length] : colors[(node.GetHashCode() & 0xFFFFFF) % colors.Length];
+            string color =
+                relation is IDotGraphEdgeColor ec ? ec.Color :
+                successor is IDotGraphNode dgn ? colors[(dgn.Id / idspercolor) % colors.Length] : colors[(node.GetHashCode() & 0xFFFFFF) % colors.Length];
 
-            string dotted = (successor is IDotGraphNode dgn2 && dgn2.IsPruned) ? ";style=dashed" : "";
+            string style =
+                relation is IDotGraphEdgeStyle dges ? $";style={dges.Style}" :
+                (successor is IDotGraphNode dgn2 && dgn2.IsPruned) ? ";style=dashed" : "";
 
             string label = EdgeLabel(relation);
 
-            int penWidth = relation is IEdgeProbability ep ? 1 + (int)(ep.Probability * 5) : 2;
+            int penWidth =
+                relation is IDotGraphEdgeThickness et ? et.Thickness :
+                relation is IEdgeProbability ep ? 1 + (int)(ep.Probability * 5) : 2;
 
-            return $"{NodeId(node)}->{NodeId(successor)} [penwidth={penWidth};color={color}{dotted}{label}];";
+            return $"{NodeId(node)}->{NodeId(successor)} [penwidth={penWidth};color={color}{style}{label}];";
         }
 
         /// <summary>
