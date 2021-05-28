@@ -543,14 +543,16 @@ namespace Abodit.Mutable
             get
             {
                 // Two layers of start nodes (root and start nodes)
+                // This is a special layout that needs to be deprecated
+                // For now, a root node is a node with no predecessors that isn't a startnode
 
                 var rootNodes = this.Nodes
                     .Where(x => !(this.Back(x).Any()))
                     .ToList();
 
                 var startNodes = this.Nodes
-                    .Except(rootNodes)
                     .Where(x => (x is IDotGraphNode dgn && dgn.IsStartNode)) // || this.Back(x).All(y => !this.Back(y.Start).Any()))
+                    .Except(rootNodes)
                     .ToList();
 
                 var endNodes = this.Nodes.Except(rootNodes).Except(startNodes).Where(x => !this.Follow(x).Any()).ToList();
@@ -560,7 +562,7 @@ namespace Abodit.Mutable
                 return "\n\ndigraph tracks {\nrankdir=\"LR\"\n" +
 
                     "{ rank=\"min\"\n" +
-                        string.Join(" ", startNodes.Select(x => NodeId(x) + " " + NodeProperties(x) + ";")) +
+                        string.Join(" ", rootNodes.Select(x => NodeId(x) + " " + NodeProperties(x) + ";")) +
                     "}\n" +
                     "{ rank=\"same\"\n" +
                         string.Join(" ", startNodes.Select(x => NodeId(x) + " " + NodeProperties(x) + ";")) +
