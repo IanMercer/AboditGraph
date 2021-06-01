@@ -35,5 +35,10 @@
         /// Gets the style for the node
         /// </summary>
         DotGraphNodeStyle Style { get; }
+
+        /// <summary>
+        /// Gets the shape for the node, defaults to ellipse
+        /// </summary>
+        DotGraphNodeShape Shape { get; }
     }
 }
