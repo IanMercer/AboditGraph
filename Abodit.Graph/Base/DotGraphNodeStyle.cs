@@ -6,6 +6,12 @@
     public enum DotGraphNodeStyle
     {
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+
+        /// <summary>
+        /// default should be mapped to "" or better omitted
+        /// </summary>
+        @default,
+
         dashed,
         dotted,
         solid,
