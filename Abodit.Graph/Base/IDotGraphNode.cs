@@ -11,7 +11,7 @@
         int Id { get; }
 
         /// <summary>
-        /// A label for the node
+        /// A label for the node and or other properties
         /// </summary>
         string DotProperties { get; }
 
@@ -24,5 +24,16 @@
         /// Displays in first column in dot graph visualization
         /// </summary>
         bool IsStartNode { get; }
+    }
+
+    /// <summary>
+    /// Styled node
+    /// </summary>
+    public interface IDotGraphNodeStyle
+    {
+        /// <summary>
+        /// Gets the style for the node
+        /// </summary>
+        DotGraphNodeStyle Style { get; }
     }
 }

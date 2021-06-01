@@ -19,7 +19,7 @@
         /// <summary>
         /// Gets the style for the edge
         /// </summary>
-        string Style { get; }
+        DotGraphEdgeStyle Style { get; }
     }
 
     /// <summary>

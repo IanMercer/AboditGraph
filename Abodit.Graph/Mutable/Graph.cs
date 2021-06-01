@@ -615,7 +615,8 @@ namespace Abodit.Mutable
                 successor is IDotGraphNode dgn ? colors[(dgn.Id / idspercolor) % colors.Length] : colors[(node.GetHashCode() & 0xFFFFFF) % colors.Length];
 
             string style =
-                relation is IDotGraphEdgeStyle dges ? $";style={dges.Style}" :
+                // solid is default
+                relation is IDotGraphEdgeStyle dges ? (dges.Style == DotGraphEdgeStyle.solid ? "" : $";style={dges.Style}") :
                 (successor is IDotGraphNode dgn2 && dgn2.IsPruned) ? ";style=dashed" : "";
 
             string label = EdgeLabel(relation);
