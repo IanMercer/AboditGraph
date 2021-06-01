@@ -291,7 +291,7 @@ namespace Abodit.Graph.Base
         /// <summary>
         /// Perform a search of the graph following a given predicate over nodes of a given type
         /// </summary>
-        public IEnumerable<T> Search<T>(TNode start, ISearchOrder<TNode> stack, TRelation predicate = default) where T : class, TNode
+        public IEnumerable<T> Search<T>(TNode start, ISearchOrder<TNode> stack, TRelation predicate = default!) where T : class, TNode
         {
             var visited = new HashSet<TNode>();
             stack.Enqueue(start);

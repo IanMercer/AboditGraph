@@ -300,7 +300,7 @@ namespace Abodit.Immutable
         /// Find all the incoming edges from a vertex with a given predicate (or null) and keep following edges of that type
         /// match only nodes of type T. Return the results as a tree (can be flattened using SelectMany).
         /// </summary>
-        public Graph<T, TRelation> Predecessors<T>(TNode start, TRelation predicate = default)
+        public Graph<T, TRelation> Predecessors<T>(TNode start, TRelation predicate = default!)
             where T : class, TNode, IEquatable<T>
         {
             var stack = new Stack<TNode>();
@@ -312,7 +312,7 @@ namespace Abodit.Immutable
         /// Find all the incoming edges from a list of nodes with a given predicate (or null) and keep following edges of that type
         /// match only nodes of type T. Return the results as a tree (can be flattened using SelectMany).
         /// </summary>
-        public Graph<T, TRelation> Predecessors<T>(IEnumerable<TNode> starts, TRelation predicate = default)
+        public Graph<T, TRelation> Predecessors<T>(IEnumerable<TNode> starts, TRelation predicate = default!)
             where T : class, TNode, IEquatable<T>
         {
             var stack = new Stack<TNode>();
