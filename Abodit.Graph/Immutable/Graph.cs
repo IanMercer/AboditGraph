@@ -245,12 +245,12 @@ namespace Abodit.Immutable
         /// Find all the outgoing edges from a vertex with a given predicate (or null) and keep following edges of that type
         /// match only nodes of type T. Return the results as a tree (can be flattened using SelectMany).
         /// </summary>
-        public Graph<T, TRelation> Successors<T>(TNode start2, TRelation predicate)
+        public Graph<T, TRelation> Successors<T>(TNode start, TRelation predicate)
             where T : class, TNode, IEquatable<T>
         {
             var result = new Graph<T, TRelation>();
             var stack = new Stack<TNode>();
-            stack.Push(start2);
+            stack.Push(start);
 
             return SuccessorsHelper<T>(result, predicate, stack);
         }
