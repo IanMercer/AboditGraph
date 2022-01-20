@@ -10,7 +10,7 @@ using System.Linq;
 namespace Abodit.Mutable
 {
     public partial class Graph<TNode, TRelation> where TNode : IEquatable<TNode>
-        where TRelation : notnull, IEquatable<TRelation>, IRelation
+        where TRelation : notnull, IEquatable<TRelation>
     {
         /// <summary>
         /// Shortest paths to everywhere with cumulative function from Source nodes

@@ -14,7 +14,7 @@ namespace Abodit.Graph.Base
     /// </remarks>
     public abstract partial class GraphBase<TNode, TRelation> : IEnumerable<TNode>
         where TNode : IEquatable<TNode>
-        where TRelation : notnull, IEquatable<TRelation>, IRelation
+        where TRelation : notnull, IEquatable<TRelation>
     {
         /// <summary>
         /// Limit the number of edges that can be attached to any node

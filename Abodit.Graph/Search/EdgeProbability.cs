@@ -8,7 +8,7 @@ namespace Abodit.Graph
     /// <remarks>
     /// This is an example of the kind of relationship you can create and use on edges in a graph.
     /// </remarks>
-    public class EdgeProbability : IRelation, IEdgeProbability, IEquatable<EdgeProbability>, IDotGraphEdge
+    public class EdgeProbability : IEdgeProbability, IEquatable<EdgeProbability>, IDotGraphEdge
     {
         private double probability;
 
@@ -22,9 +22,6 @@ namespace Abodit.Graph
                 this.probability = value;
             }
         }
-
-        /// <inheritdoc />
-        public bool IsReflexive => false;
 
         /// <summary>
         /// Get a label for a dot graph

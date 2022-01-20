@@ -1,7 +1,7 @@
 ﻿namespace Abodit.Graph
 {
     /// <summary>
-    /// An interface that Relations in Graphs may implement to indicate reflexive relationships
+    /// An optional interface that Relations in Graphs may implement to indicate reflexive relationships
     /// </summary>
     /// <remarks>
     /// This is a convenience that allows a statement to be added one way and to automatically be added

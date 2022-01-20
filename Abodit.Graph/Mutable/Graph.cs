@@ -1,4 +1,5 @@
 ﻿using Abodit.Graph;
+using Abodit.Graph.Base;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,9 +9,10 @@ namespace Abodit.Mutable
     /// <summary>
     /// An in-memory, mutable graph of statements (subject, predicate, object)
     /// </summary>
-    public partial class Graph<TNode, TRelation> : Abodit.Graph.Base.GraphBase<TNode, TRelation>, IEnumerable<TNode>
+    public partial class Graph<TNode, TRelation> : GraphBase<TNode, TRelation>, 
+        IEnumerable<TNode>
         where TNode : IEquatable<TNode>
-        where TRelation : notnull, IEquatable<TRelation>, IRelation
+        where TRelation : notnull, IEquatable<TRelation>
     {
         /// <summary>
         /// Add a statement, returns true if it was added, false if already there
@@ -25,7 +27,7 @@ namespace Abodit.Mutable
             // If something is a synonym of itself, really don't care
             if (start.Equals(end)) return false;
 
-            if (predicate.IsReflexive)
+            if (predicate is IRelation ir && ir.IsReflexive)
             {
                 this.AddStatement(new Edge(end, predicate, start));
             }
@@ -350,47 +352,73 @@ namespace Abodit.Mutable
         }
 
         /// <summary>
-        /// Find all the outgoing edges from a node, optionally filtered to a set of predicates
-        /// match only nodes of type T along the way.
+        /// Find all the outgoing edges from a vertex with a given predicate (or null) and keep following edges of that type
+        /// match only nodes of type T. Return the results as a tree (can be flattened using SelectMany).
         /// </summary>
-        /// <returns>The results as a tree (can be flattened using SelectMany). Edges are the predicates
-        /// that were used during the search which is only a subset of all edges between these nodes.</returns>
-        public Graph<T, TRelation> Successors<T>(TNode start2, params TRelation[] predicates)
+        public Graph<T, TRelation> Successors<T>(TNode start, TRelation predicate = default!)
             where T : TNode, IEquatable<T>
         {
-            var result = new Graph<T, TRelation>();
             var stack = new Stack<TNode>();
-            stack.Push(start2);
-
-            return SuccessorsHelper<T>(result, stack, predicates);
+            stack.Push(start);
+            return SuccessorsHelper<T>((s, pn, e) => predicate is null || predicate.Equals(pn), stack);
         }
 
         /// <summary>
-        /// Find all the outgoing edges from a list of nodes, optionally filtered to a set of predicates.
-        /// Match only nodes of type T along the way.
+        /// Find all the outgoing edges from a vertex with a given predicate and keep following edges of that type
+        /// match only nodes of type T. Return the results as a tree (can be flattened using SelectMany).
         /// </summary>
-        /// <returns>The results as a tree (can be flattened using SelectMany). Edges are the predicates
-        /// that were used during the search which is only a subset of all edges between these nodes.</returns>
-        public Graph<T, TRelation> Successors<T>(IEnumerable<TNode> starts, params TRelation[] predicates)
+        public Graph<T, TRelation> Successors<T>(TNode start,
+            Func<TNode, TRelation, TNode, bool> predicate)
+            where T : class, TNode, IEquatable<T>
+        {
+            var stack = new Stack<TNode>();
+            stack.Push(start);
+            return SuccessorsHelper<T>(predicate, stack);
+        }
+
+        /// <summary>
+        /// Find all the outgoing edges from a list of node with a given predicate (or null) and keep following edges of that type
+        /// match only nodes of type T. Return the results as a tree (can be flattened using SelectMany).
+        /// </summary>
+        public Graph<T, TRelation> Successors<T>(IEnumerable<TNode> starts,
+            TRelation predicate = default!)
             where T : TNode, IEquatable<T>
         {
-            var result = new Graph<T, TRelation>();
             var stack = new Stack<TNode>();
             foreach (var start in starts)
             {
                 stack.Push(start);
             }
-            return SuccessorsHelper<T>(result, stack, predicates);
+            return SuccessorsHelper<T>((s, pn, e) => predicate is null || predicate.Equals(pn), stack);
         }
 
-        private Graph<T, TRelation> SuccessorsHelper<T>(Graph<T, TRelation> result, Stack<TNode> stack, params TRelation[] predicates) where T : IEquatable<T>, TNode
+        /// <summary>
+        /// Find all the outgoing edges from a list of node with a given predicate and keep following edges of that type
+        /// match only nodes of type T. Return the results as a tree (can be flattened using SelectMany).
+        /// </summary>
+        public Graph<T, TRelation> Successors<T>(IEnumerable<TNode> starts,
+            Func<TNode, TRelation, TNode, bool> predicate)
+            where T : class, TNode, IEquatable<T>
         {
+            var stack = new Stack<TNode>();
+            foreach (var start in starts)
+            {
+                stack.Push(start);
+            }
+            return SuccessorsHelper<T>(predicate, stack);
+        }
+
+        private Graph<T, TRelation> SuccessorsHelper<T>(
+            Func<TNode, TRelation, TNode, bool> predicate,
+            Stack<TNode> stack) where T : IEquatable<T>, TNode
+        {
+            var result = new Graph<T, TRelation>();
             var visited = new HashSet<TNode>();
 
             while (stack.Count > 0)
             {
                 var start = stack.Pop();
-                var outgoing = this.Follow(start, predicates);
+                var outgoing = this.Follow(start, predicate);
 
                 foreach (var edge in outgoing)
                 {
@@ -409,37 +437,68 @@ namespace Abodit.Mutable
         }
 
         /// <summary>
-        /// Find all the incoming edges from a vertex using a given set of predicates (or none)
-        /// and keep following edges of that type match only nodes of type T.
+        /// Find all the incoming edges from a vertex with a given predicate (or null) and keep following edges of that type
+        /// match only nodes of type T. Return the results as a tree (can be flattened using SelectMany).
         /// </summary>
-        /// <returns>The results as a tree (can be flattened using SelectMany). Edges are the predicates
-        /// that were used during the search which is only a subset of all edges between these nodes.</returns>
-        public Graph<T, TRelation> Predecessors<T>(TNode start, params TRelation[] predicates)
-            where T : TNode, IEquatable<T>
+        public Graph<T, TRelation> Predecessors<T>(TNode start,
+            Func<TNode, TRelation, TNode, bool> predicate)
+            where T : class, TNode, IEquatable<T>
         {
             var stack = new Stack<TNode>();
             stack.Push(start);
-            return PredecessorsHelper<T>(stack, predicates);
+            return PredecessorsHelper<T>(predicate!, stack);
         }
 
         /// <summary>
-        /// Find all the incoming edges from a list of nodes using a given set of predicates (or empty for all)
-        /// and keep following edges of those types, match only nodes of type T.
+        /// Find all the incoming edges from a vertex with a given predicate (or null) and keep following edges of that type
+        /// match only nodes of type T. Return the results as a tree (can be flattened using SelectMany).
         /// </summary>
-        /// <returns>The results as a tree (can be flattened using SelectMany). Edges are the predicates
-        /// that were used during the search which is only a subset of all edges between these nodes.</returns>
-        public Graph<T, TRelation> Predecessors<T>(IEnumerable<TNode> starts, params TRelation[] predicates)
-            where T : TNode, IEquatable<T>
+        public Graph<T, TRelation> Predecessors<T>(TNode start,
+            TRelation predicate = default!)
+            where T : class, TNode, IEquatable<T>
+        {
+            var stack = new Stack<TNode>();
+            stack.Push(start);
+            return PredecessorsHelper<T>((s, pn, e) => predicate is null || predicate.Equals(pn), stack);
+        }
+
+        /// <summary>
+        /// Find all the incoming edges from a list of nodes with a given predicate (or null) and keep following edges of that type
+        /// match only nodes of type T. Return the results as a tree (can be flattened using SelectMany).
+        /// </summary>
+        public Graph<T, TRelation> Predecessors<T>(IEnumerable<TNode> starts,
+            Func<TNode, TRelation, TNode, bool> predicate)
+            where T : class, TNode, IEquatable<T>
         {
             var stack = new Stack<TNode>();
             foreach (var start in starts)
             {
                 stack.Push(start);
             }
-            return PredecessorsHelper<T>(stack, predicates);
+            return PredecessorsHelper<T>(predicate, stack);
         }
 
-        private Graph<T, TRelation> PredecessorsHelper<T>(Stack<TNode> stack, params TRelation[] predicates) where T : IEquatable<T>, TNode
+        /// <summary>
+        /// Find all the incoming edges from a list of nodes with a given predicate and keep following edges of that type
+        /// match only nodes of type T. Return the results as a tree (can be flattened using SelectMany).
+        /// </summary>
+        public Graph<T, TRelation> Predecessors<T>(IEnumerable<TNode> starts,
+            TRelation predicate = default!)
+            where T : class, TNode, IEquatable<T>
+        {
+            var stack = new Stack<TNode>();
+            foreach (var start in starts)
+            {
+                stack.Push(start);
+            }
+            return PredecessorsHelper<T>((s, pn, e) => predicate is null || predicate.Equals(pn), stack);
+        }
+
+
+        private Graph<T, TRelation> PredecessorsHelper<T>(
+            Func<TNode, TRelation, TNode, bool> predicate,
+            Stack<TNode> stack
+            ) where T : IEquatable<T>, TNode
         {
             var visited = new HashSet<TNode>();
             var result = new Graph<T, TRelation>();
@@ -447,7 +506,7 @@ namespace Abodit.Mutable
             while (stack.Count > 0)
             {
                 var start = stack.Pop();
-                var incoming = this.Back(start, predicates);
+                var incoming = this.Back(start, predicate);
 
                 foreach (var edge in incoming)
                 {
@@ -597,7 +656,7 @@ namespace Abodit.Mutable
             else return "";
         }
 
-        private string EdgeLabel(IRelation edge)
+        private string EdgeLabel(TRelation edge)
         {
             if (edge is IDotGraphEdge dotEdge) return " ;label=\"" + dotEdge.DotLabel + "\"";
             else return "";
@@ -633,7 +692,7 @@ namespace Abodit.Mutable
         /// </summary>
         public Graph<TNode2, TRelation2> Project<TNode2, TRelation2>(Func<TNode, TNode2> nodeProjection, Func<TRelation, TRelation2> edgeProjection)
             where TNode2 : IEquatable<TNode2>
-            where TRelation2 : IEquatable<TRelation2>, IRelation
+            where TRelation2 : IEquatable<TRelation2>
         {
             var graph = new Mutable.Graph<TNode2, TRelation2>();
 

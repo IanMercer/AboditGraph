@@ -1,4 +1,5 @@
 ﻿using Abodit.Graph;
+using Abodit.Graph.Base;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -12,9 +13,10 @@ namespace Abodit.Immutable
     /// <remarks>
     /// Shares nodes with other graphs
     /// </remarks>
-    public class Graph<TNode, TRelation> : Abodit.Graph.Base.GraphBase<TNode, TRelation>, IEnumerable<TNode>
+    public class Graph<TNode, TRelation> : GraphBase<TNode, TRelation>, 
+        IEnumerable<TNode>
         where TNode : class, IEquatable<TNode>
-        where TRelation : notnull, IEquatable<TRelation>, IRelation
+        where TRelation : notnull, IEquatable<TRelation>
     {
         /// <summary>
         /// Create a new empty graph
@@ -40,7 +42,7 @@ namespace Abodit.Immutable
             // If something is a synonym of itself, really don't care
             if (start == end) return this;
 
-            if (predicate is TRelation && predicate.IsReflexive)
+            if (predicate is IRelation ir && ir.IsReflexive)
             {
                 this.AddStatement(new Edge(end, predicate, start));
             }
@@ -248,11 +250,9 @@ namespace Abodit.Immutable
         public Graph<T, TRelation> Successors<T>(TNode start, TRelation predicate)
             where T : class, TNode, IEquatable<T>
         {
-            var result = new Graph<T, TRelation>();
             var stack = new Stack<TNode>();
             stack.Push(start);
-
-            return SuccessorsHelper<T>(result, predicate, stack);
+            return SuccessorsHelper<T>((s,pn,e) => predicate is null || predicate.Equals(pn), stack);
         }
 
         /// <summary>
@@ -263,27 +263,25 @@ namespace Abodit.Immutable
             Func<TNode, TRelation, TNode, bool> predicate)
             where T : class, TNode, IEquatable<T>
         {
-            var result = new Graph<T, TRelation>();
             var stack = new Stack<TNode>();
             stack.Push(start);
-
-            return SuccessorsHelper<T>(result, predicate, stack);
+            return SuccessorsHelper<T>(predicate, stack);
         }
 
         /// <summary>
         /// Find all the outgoing edges from a list of node with a given predicate (or null) and keep following edges of that type
         /// match only nodes of type T. Return the results as a tree (can be flattened using SelectMany).
         /// </summary>
-        public Graph<T, TRelation> Successors<T>(IEnumerable<TNode> starts, TRelation predicate)
+        public Graph<T, TRelation> Successors<T>(IEnumerable<TNode> starts, 
+            TRelation predicate)
             where T : class, TNode, IEquatable<T>
         {
-            var result = new Graph<T, TRelation>();
             var stack = new Stack<TNode>();
             foreach (var start in starts)
             {
                 stack.Push(start);
             }
-            return SuccessorsHelper<T>(result, predicate, stack);
+            return SuccessorsHelper<T>((s,pn,e) => predicate is null || predicate.Equals(pn), stack);
         }
 
         /// <summary>
@@ -294,45 +292,20 @@ namespace Abodit.Immutable
             Func<TNode,TRelation,TNode,bool> predicate)
             where T : class, TNode, IEquatable<T>
         {
-            var result = new Graph<T, TRelation>();
             var stack = new Stack<TNode>();
             foreach (var start in starts)
             {
                 stack.Push(start);
             }
-            return SuccessorsHelper<T>(result, predicate, stack);
+            return SuccessorsHelper<T>(predicate, stack);
         }
 
-        private Graph<T, TRelation> SuccessorsHelper<T>(Graph<T, TRelation> result, TRelation predicate, Stack<TNode> stack) where T : class, IEquatable<T>, TNode
-        {
-            var visited = new HashSet<TNode>();
-
-            while (stack.Count > 0)
-            {
-                var start = stack.Pop();
-                var outgoing = this.Follow(start, predicate);
-
-                foreach (var edge in outgoing)
-                {
-                    if (!(edge.Start is T inEnd) || !(edge.End is T outEnd)) continue;
-
-                    result = result.AddStatement(inEnd, edge.Predicate, outEnd);
-
-                    if (!visited.Contains(outEnd))
-                    {
-                        stack.Push(outEnd);
-                        visited.Add(outEnd);
-                    }
-                }
-            }
-            return result;
-        }
-
-        private Graph<T, TRelation> SuccessorsHelper<T>(Graph<T, TRelation> result, 
+        private Graph<T, TRelation> SuccessorsHelper<T>( 
             Func<TNode,TRelation,TNode,bool> predicate, 
             Stack<TNode> stack) 
             where T : class, IEquatable<T>, TNode
         {
+            var result = new Graph<T, TRelation>();
             var visited = new HashSet<TNode>();
 
             while (stack.Count > 0)
@@ -379,7 +352,7 @@ namespace Abodit.Immutable
         {
             var stack = new Stack<TNode>();
             stack.Push(start);
-            return PredecessorsHelper<T>(predicate!, stack);
+            return PredecessorsHelper<T>((s,pn,e) => predicate is null || predicate.Equals(pn), stack);
         }
 
         /// <summary>
@@ -395,7 +368,7 @@ namespace Abodit.Immutable
             {
                 stack.Push(start);
             }
-            return PredecessorsHelper<T>(predicate!, stack);
+            return PredecessorsHelper<T>(predicate, stack);
         }
 
         /// <summary>
@@ -411,7 +384,7 @@ namespace Abodit.Immutable
             {
                 stack.Push(start);
             }
-            return PredecessorsHelper<T>(predicate!, stack);
+            return PredecessorsHelper<T>((s,pn,e) => predicate is null || predicate.Equals(pn), stack);
         }
 
 
@@ -443,33 +416,5 @@ namespace Abodit.Immutable
             return result;
         }
 
-
-
-        private Graph<T, TRelation> PredecessorsHelper<T>(TRelation predicate, Stack<TNode> stack)
-            where T : class, IEquatable<T>, TNode
-        {
-            var visited = new HashSet<TNode>();
-            var result = new Graph<T, TRelation>();
-
-            while (stack.Count > 0)
-            {
-                var start = stack.Pop();
-                var incoming = this.Back(start, predicate);
-
-                foreach (var edge in incoming)
-                {
-                    if (!(edge.Start is T inEnd) || !(edge.End is T outEnd)) continue;
-
-                    result = result.AddStatement(inEnd, edge.Predicate, outEnd);
-
-                    if (!visited.Contains(inEnd))
-                    {
-                        stack.Push(inEnd);
-                        visited.Add(inEnd);
-                    }
-                }
-            }
-            return result;
-        }
     }
 }

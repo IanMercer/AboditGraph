@@ -24,7 +24,7 @@ namespace Abodit.Graph
             Func<double, double, double> accumulator
             )
             where TNode : class, IEquatable<TNode>
-            where TRelation : IRelation, IEquatable<TRelation>
+            where TRelation : IEquatable<TRelation>
         {
             var visited = new Dictionary<TNode, TNode?>();                 // visited node and where we came from ...
             var heap = new Dictionary<TNode, (TNode? node, double cumulative)>();        // can reach A from B in distance C

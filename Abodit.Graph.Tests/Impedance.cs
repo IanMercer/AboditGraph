@@ -5,7 +5,7 @@ namespace Abodit.Units.Tests.Graph
 {
     public partial class GraphTestPathFinding
     {
-        public class Impedance : IRelation, IEquatable<Impedance>
+        public class Impedance : IEquatable<Impedance>
         {
             public double Resistance { get; }
 
@@ -13,8 +13,6 @@ namespace Abodit.Units.Tests.Graph
             {
                 this.Resistance = resistance;
             }
-
-            public bool IsReflexive => false;
 
             public bool Equals(Impedance? other)
             {

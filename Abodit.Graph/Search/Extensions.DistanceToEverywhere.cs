@@ -21,7 +21,7 @@ namespace Abodit.Graph
         public static IEnumerable<Tuple<TNode, int>> DistanceToEverywhere<TNode, TRelation>(this GraphBase<TNode, TRelation> graph, TNode subject,
             bool includeStartNode, TRelation predicate)
             where TNode : IEquatable<TNode>
-            where TRelation : IRelation, IEquatable<TRelation>
+            where TRelation : IEquatable<TRelation>
         {
             HashSet<TNode> visited = new HashSet<TNode>();
             Dictionary<TNode, int> heap = new Dictionary<TNode, int>();

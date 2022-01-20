@@ -170,7 +170,7 @@ namespace Abodit.Units.Tests.Graph
             graph.Nodes.Should().HaveCount(4);
         }
 
-        public class Relation : IRelation, IEquatable<Relation>
+        public class Relation : IEquatable<Relation>
         {
             public static Relation Implies = new Relation("Implies");
             public static Relation Related = new Relation("Related");
@@ -179,8 +179,6 @@ namespace Abodit.Units.Tests.Graph
             {
                 Name = name;
             }
-
-            public bool IsReflexive => false;
 
             public string Name { get; }
 
