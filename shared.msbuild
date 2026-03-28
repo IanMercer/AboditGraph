@@ -4,14 +4,15 @@
     <Authors>Ian Mercer</Authors>
     <Company>SignSwift LLC</Company>
     <Product>Abodit.Graph</Product>
-    <Copyright>Signswift LLC 2005-2021</Copyright>
+    <Copyright>Signswift LLC 2005-2026</Copyright>
     <AssemblyTrademark></AssemblyTrademark>
     <AssemblyCulture>EN-US</AssemblyCulture>
     <Version>2.9.99.8888</Version>
     <AssemblyVersion>2.9</AssemblyVersion>
     <FileVersion>2.9.99.8888</FileVersion>
     <InformationalVersion>2.9.99.8888</InformationalVersion>
-    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <!-- Build XML documentation for all combinations of target framework and configuration -->
@@ -20,6 +21,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="LICENSE.txt" Pack="true" PackagePath="" />
+    <None Include="$(MSBuildThisFileDirectory)LICENSE" Pack="true" PackagePath="" />
+    <None Include="$(MSBuildThisFileDirectory)README.md" Pack="true" PackagePath="" />
   </ItemGroup>
 </Project>

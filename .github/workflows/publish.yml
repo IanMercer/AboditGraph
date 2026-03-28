@@ -1,0 +1,39 @@
+name: Publish to NuGet
+
+on:
+  push:
+    tags:
+      - 'v*'   # trigger on version tags, e.g. v3.0.0
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            6.0.x
+            9.0.x
+
+      # Strip the leading 'v' from the tag (v3.0.0 → 3.0.0)
+      - name: Set version from tag
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
+
+      - name: Restore
+        run: dotnet restore Abodit.Graph.sln
+
+      - name: Build
+        run: dotnet build Abodit.Graph.sln --no-restore -c Release /p:Version=${{ env.VERSION }}
+
+      - name: Test
+        run: dotnet test Abodit.Graph.sln --no-build -c Release
+
+      - name: Pack
+        run: dotnet pack Abodit.Graph/Abodit.Graph.csproj --no-build -c Release /p:Version=${{ env.VERSION }} -o ./artifacts
+
+      - name: Push to NuGet.org
+        run: dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
