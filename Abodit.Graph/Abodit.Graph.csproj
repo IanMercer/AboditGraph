@@ -6,7 +6,7 @@
     <Authors>Ian Mercer</Authors>
     <Company>Signswift LLC</Company>
     <Description>A Graph implementation for mutable and immutable graphs. Aims to be fast at forward and backward traversal over links. Includes some graph algorithms for traversals, path finding, topological sort and page rank.</Description>
-    <Copyright>Ian Mercer 2019-2024</Copyright>
+    <Copyright>Ian Mercer 2019-2026</Copyright>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
