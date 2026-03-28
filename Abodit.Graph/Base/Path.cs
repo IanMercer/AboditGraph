@@ -31,8 +31,13 @@ namespace Abodit.Graph
         public TNode Root => this.Previous is null ? this.Current : this.Previous.Root;
 
         /// <summary>
-        /// Get current pair
+        /// Returns the <c>(previous, current)</c> node pair for this step in the path.
         /// </summary>
+        /// <exception cref="NullReferenceException">
+        /// Thrown when called on the root node of a path, which has no <see cref="Previous"/> step.
+        /// Check <c>Previous is not null</c> before calling, or use <see cref="Pairs"/> to iterate
+        /// all pairs safely.
+        /// </exception>
         public (TNode previous, TNode successor) Pair => (this.Previous!.Current, this.Current);
 
         /// <summary>

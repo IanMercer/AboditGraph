@@ -60,29 +60,40 @@ namespace Abodit.Graph.Base
         }
 
         /// <summary>
-        /// Enumerate all the nodes with no priors
+        /// Enumerate all the nodes with no incoming edges (roots of the graph).
         /// </summary>
+        /// <remarks>
+        /// Computed in O(n) using a <see cref="HashSet{T}"/> rather than LINQ <c>Except</c>,
+        /// which would be O(n²) for large graphs.
+        /// </remarks>
         public IEnumerable<TNode> StartNodes
         {
             get
             {
-                return this.StartIndexedEdges.Select(x => x.Key).Except(this.EndIndexedEdges.Select(x => x.Key));
+                var endSet = new HashSet<TNode>(this.EndIndexedEdges.Keys);
+                return this.StartIndexedEdges.Keys.Where(k => !endSet.Contains(k));
             }
         }
 
         /// <summary>
-        /// Enumerate all the nodes with no successors
+        /// Enumerate all the nodes with no outgoing edges (leaves of the graph).
         /// </summary>
+        /// <remarks>
+        /// Computed in O(n) using a <see cref="HashSet{T}"/> rather than LINQ <c>Except</c>,
+        /// which would be O(n²) for large graphs.
+        /// </remarks>
         public IEnumerable<TNode> EndNodes
         {
             get
             {
-                return this.EndIndexedEdges.Select(x => x.Key).Except(this.StartIndexedEdges.Select(x => x.Key));
+                var startSet = new HashSet<TNode>(this.StartIndexedEdges.Keys);
+                return this.EndIndexedEdges.Keys.Where(k => !startSet.Contains(k));
             }
         }
 
         /// <summary>
-        /// Does the graph contain this node?
+        /// Returns <see langword="true"/> if the graph contains <paramref name="node"/> as either
+        /// the start or end of at least one edge.
         /// </summary>
         public bool Contains(TNode node) => this.StartIndexedEdges.Any(x => x.Key.Equals(node)) || this.EndIndexedEdges.Any(x => x.Key.Equals(node));
 
@@ -217,9 +228,17 @@ namespace Abodit.Graph.Base
         }
 
         /// <summary>
-        /// Find all the siblings of a node by following one or more predicates backwards
-        /// to find parent nodes and then forwards to find children at the same level
+        /// Returns all siblings of <paramref name="child"/>: nodes that share at least one parent
+        /// reachable by following the given <paramref name="predicates"/> backward from
+        /// <paramref name="child"/> and then forward to the parent's other children.
         /// </summary>
+        /// <remarks>
+        /// A "sibling" is any node <c>S ≠ child</c> such that there exists a node <c>P</c> with
+        /// edges <c>P → child</c> and <c>P → S</c> (both via one of the supplied predicates).
+        /// If no predicates are supplied all edge types are followed.
+        /// The same sibling may be returned more than once if it shares multiple parents with
+        /// <paramref name="child"/>.
+        /// </remarks>
         public IEnumerable<TNode> Siblings(TNode child, params TRelation[] predicates)
         {
             HashSet<TNode> seen = new HashSet<TNode>();
@@ -320,11 +339,17 @@ namespace Abodit.Graph.Base
         }
 
         /// <summary>
-        /// Topological sort approx
+        /// Returns an approximate topological ordering of all reachable nodes using Kahn's algorithm.
         /// </summary>
+        /// <remarks>
+        /// The "Approx" qualifier means that cycles are silently tolerated: nodes involved in a cycle
+        /// are simply not visited (they never become start-nodes) and are omitted from the result.
+        /// For a strict DAG the result is a valid topological order.  For a graph with cycles it is a
+        /// best-effort partial order that excludes the cyclic nodes.
+        /// </remarks>
         public IEnumerable<TNode> TopologicalSortApprox()
         {
-            var nodesWithNoIncomingLinks = this.StartNodes;
+            var nodesWithNoIncomingLinks = this.StartNodes.ToList();
 
             // L ← Empty list that will contain the sorted elements
             var l = new List<TNode>();
@@ -360,23 +385,35 @@ namespace Abodit.Graph.Base
         }
 
         /// <summary>
-        /// PageRank algorithm on Graph assuming equal weighting on each edge type
+        /// Computes PageRank for every node in the graph, assuming equal weighting on each edge type.
+        /// Returns results in ascending rank order.
         /// </summary>
+        /// <param name="iterations">
+        /// Number of power-iteration steps to run.  More iterations improve accuracy;
+        /// 20 is typically sufficient for graphs that are not extremely large or sparse.
+        /// </param>
+        /// <param name="d">
+        /// Damping factor (default 0.85).  Represents the probability that a random walker
+        /// follows an outgoing edge rather than teleporting to a random node.
+        /// The teleportation component distributes <c>(1 - d) / N</c> rank to every node each iteration.
+        /// Dangling nodes (no outgoing edges) distribute their entire rank equally to all nodes.
+        /// </param>
         public IEnumerable<(double rank, TNode node)> PageRank(int iterations, double d = 0.85)
         {
-            double oneOverN = 1.0 / this.Nodes.Count();
-            int N = this.Nodes.Count();
+            var allNodes = this.Nodes.ToList();
+            int N = allNodes.Count;
+            double oneOverN = 1.0 / N;
             double startValue = (1.0 - d) / N;
 
-            Dictionary<TNode, double> pageRanks = this.Nodes.Select(n => (n, oneOverN)).ToDictionary(x => x.n, x => x.oneOverN);
+            Dictionary<TNode, double> pageRanks = allNodes.ToDictionary(x => x, _ => oneOverN);
 
             // calculate page rank
 
             for (int i = 0; i < iterations; i++)
             {
-                Dictionary<TNode, double> pageRanksNext = this.Nodes.ToDictionary(x => x, x => startValue);
+                Dictionary<TNode, double> pageRanksNext = allNodes.ToDictionary(x => x, _ => startValue);
 
-                foreach (var node in this.Nodes)
+                foreach (var node in allNodes)
                 {
                     var edges = Follow(node);
                     int L = edges.Count();          // number of outbound edges

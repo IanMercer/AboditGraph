@@ -1,7 +1,6 @@
-﻿using Abodit.Graph.Base;
+using Abodit.Graph.Base;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Abodit.Graph
 {
@@ -11,49 +10,56 @@ namespace Abodit.Graph
     public static partial class Extensions
     {
         /// <summary>
-        /// Get all the nodes that can be reached by following relationships of a given type
-        /// returns them in sorted order according to how close they are
-        /// so shortest path is returned first.  Tuple includes the distance.
+        /// Returns all nodes reachable from <paramref name="subject"/> by following edges of type
+        /// <paramref name="predicate"/>, ordered by ascending hop-count distance from the subject.
+        /// Each result is a <c>(node, distance)</c> pair where distance is the number of hops.
         /// </summary>
         /// <remarks>
-        /// Handles circular graphs too ...
+        /// Implements Dijkstra's algorithm with a <see cref="PriorityQueue{TElement,TPriority}"/> for
+        /// O((n + e) log n) complexity. Handles circular graphs by tracking visited nodes.
         /// </remarks>
-        public static IEnumerable<Tuple<TNode, int>> DistanceToEverywhere<TNode, TRelation>(this GraphBase<TNode, TRelation> graph, TNode subject,
-            bool includeStartNode, TRelation predicate)
+        /// <param name="graph">The graph to search.</param>
+        /// <param name="subject">The starting node.</param>
+        /// <param name="includeStartNode">When <see langword="true"/>, the first result is the subject itself at distance 0.</param>
+        /// <param name="predicate">The edge type to follow.</param>
+        public static IEnumerable<Tuple<TNode, int>> DistanceToEverywhere<TNode, TRelation>(
+            this GraphBase<TNode, TRelation> graph,
+            TNode subject,
+            bool includeStartNode,
+            TRelation predicate)
             where TNode : IEquatable<TNode>
             where TRelation : IEquatable<TRelation>
         {
-            HashSet<TNode> visited = new HashSet<TNode>();
-            Dictionary<TNode, int> heap = new Dictionary<TNode, int>();
+            var visited = new HashSet<TNode>();
+            // Min-heap keyed by distance — O(log n) enqueue and dequeue
+            var queue = new PriorityQueue<TNode, int>();
+            queue.Enqueue(subject, 0);
 
-            // Breadth first search, ensures we search in distance order
-            heap.Add(subject, 0);
+            // Track best-known distance to handle a node being enqueued multiple times
+            var bestDistance = new Dictionary<TNode, int> { [subject] = 0 };
 
-            while (heap.Any())
+            while (queue.Count > 0)
             {
-                var first = heap.OrderBy(h => h.Value).First();     // Next closest, TODO: an ordered heap would help
+                queue.TryDequeue(out TNode? node, out int distance);
 
-                var node = first.Key;
-                var distance = first.Value;
+                if (!visited.Add(node!))
+                    continue;   // already processed at a shorter distance
 
-                heap.Remove(node);
-                visited.Add(node);
-
-                // Where can we reach from this node? - add them all to the heap according to distance
-                foreach (var item in graph.Follow(node, predicate))
+                foreach (var item in graph.Follow(node!, predicate))
                 {
                     var end = item.End;
+                    if (visited.Contains(end)) continue;
 
-                    // If not already visited, go visit it ...
-                    if (!visited.Contains(end))
+                    int newDist = distance + 1;
+                    if (!bestDistance.TryGetValue(end, out int known) || newDist < known)
                     {
-                        if (heap.ContainsKey(end)) heap[end] = Math.Min(heap[end], distance + 1);
-                        else heap[end] = distance + 1;
+                        bestDistance[end] = newDist;
+                        queue.Enqueue(end, newDist);
                     }
                 }
 
-                if (includeStartNode || !node.Equals(subject))
-                    yield return Tuple.Create(node, distance);
+                if (includeStartNode || !node!.Equals(subject))
+                    yield return Tuple.Create(node!, distance);
             }
         }
     }

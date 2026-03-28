@@ -80,12 +80,32 @@ namespace Abodit.Mutable
         }
 
         /// <summary>
-        /// Remove a statement
+        /// Remove a statement, returns true if it was removed.
         /// </summary>
+        /// <remarks>
+        /// When <paramref name="predicate"/> is a reflexive <see cref="IRelation"/>,
+        /// the automatically-added reverse edge is also removed, mirroring the behaviour of
+        /// <see cref="AddStatement(TNode, TRelation, TNode)"/>.
+        /// </remarks>
         public bool RemoveStatement(TNode start, TRelation predicate, TNode end)
         {
             if (!this.StartIndexedEdges.ContainsKey(start)) return false;
             if (!this.EndIndexedEdges.ContainsKey(end)) return false;      // should never happen
+
+            // For reflexive predicates, also remove the reverse edge that was auto-added by AddStatement
+            if (predicate is IRelation ir && ir.IsReflexive && !start.Equals(end)
+                && this.StartIndexedEdges.ContainsKey(end) && this.EndIndexedEdges.ContainsKey(start))
+            {
+                RemoveStatementCore(end, predicate, start);
+            }
+
+            return RemoveStatementCore(start, predicate, end);
+        }
+
+        private bool RemoveStatementCore(TNode start, TRelation predicate, TNode end)
+        {
+            if (!this.StartIndexedEdges.ContainsKey(start)) return false;
+            if (!this.EndIndexedEdges.ContainsKey(end)) return false;
 
             PredicateNext? startCopy = this.StartIndexedEdges[start];
             PredicatePrevious? endCopy = this.EndIndexedEdges[end];
@@ -313,7 +333,10 @@ namespace Abodit.Mutable
         }
 
         /// <summary>
-        /// Replace an edge in the graph
+        /// Removes all edges between <paramref name="start"/> and <paramref name="end"/> (in both
+        /// directions) and adds a new edge with <paramref name="newRelation"/>.
+        /// Returns <see langword="true"/> when exactly one forward and one backward edge were removed
+        /// and the new edge was successfully added.
         /// </summary>
         public bool ReplaceEdge(TNode start, TNode end, TRelation newRelation)
         {
@@ -324,7 +347,8 @@ namespace Abodit.Mutable
         }
 
         /// <summary>
-        /// Union two graphs
+        /// Returns a new graph containing all edges from both this graph and <paramref name="other"/>.
+        /// Duplicate edges (same start, predicate, and end) are included only once.
         /// </summary>
         public Graph<TNode, TRelation> Union(Graph<TNode, TRelation> other)
         {
@@ -337,7 +361,8 @@ namespace Abodit.Mutable
         }
 
         /// <summary>
-        /// Intersect two graphs
+        /// Returns a new graph containing only the edges that exist in both this graph and
+        /// <paramref name="other"/> (same start node, predicate, and end node).
         /// </summary>
         public Graph<TNode, TRelation> Intersect(Graph<TNode, TRelation> other)
         {
@@ -352,9 +377,13 @@ namespace Abodit.Mutable
         }
 
         /// <summary>
-        /// Find all the outgoing edges from a vertex with a given predicate (or null) and keep following edges of that type
-        /// match only nodes of type T. Return the results as a tree (can be flattened using SelectMany).
+        /// Traverses all outgoing edges reachable from <paramref name="start"/> that satisfy
+        /// <paramref name="predicate"/> and returns a sub-graph containing only edges where both
+        /// endpoints are of type <typeparamref name="T"/>.
         /// </summary>
+        /// <typeparam name="T">The node type to filter to.  Must be a sub-type of <typeparamref name="TNode"/>.</typeparam>
+        /// <param name="start">The node to start the traversal from.</param>
+        /// <param name="predicate">Edge type filter.  Pass <see langword="default"/> to follow all edge types.</param>
         public Graph<T, TRelation> Successors<T>(TNode start, TRelation predicate = default!)
             where T : TNode, IEquatable<T>
         {
@@ -364,9 +393,12 @@ namespace Abodit.Mutable
         }
 
         /// <summary>
-        /// Find all the outgoing edges from a vertex with a given predicate and keep following edges of that type
-        /// match only nodes of type T. Return the results as a tree (can be flattened using SelectMany).
+        /// Traverses all outgoing edges reachable from <paramref name="start"/> matching the supplied
+        /// edge condition and returns a sub-graph of nodes of type <typeparamref name="T"/>.
         /// </summary>
+        /// <typeparam name="T">The node type to filter to.  Must be a sub-type of <typeparamref name="TNode"/>.</typeparam>
+        /// <param name="start">The node to start the traversal from.</param>
+        /// <param name="predicate">A condition on (startNode, relation, endNode) that must be satisfied for an edge to be followed.</param>
         public Graph<T, TRelation> Successors<T>(TNode start,
             Func<TNode, TRelation, TNode, bool> predicate)
             where T : class, TNode, IEquatable<T>
@@ -377,9 +409,13 @@ namespace Abodit.Mutable
         }
 
         /// <summary>
-        /// Find all the outgoing edges from a list of node with a given predicate (or null) and keep following edges of that type
-        /// match only nodes of type T. Return the results as a tree (can be flattened using SelectMany).
+        /// Traverses all outgoing edges reachable from each of <paramref name="starts"/> that
+        /// satisfy <paramref name="predicate"/> and returns a sub-graph of nodes of type
+        /// <typeparamref name="T"/>.
         /// </summary>
+        /// <typeparam name="T">The node type to filter to.  Must be a sub-type of <typeparamref name="TNode"/>.</typeparam>
+        /// <param name="starts">The set of nodes to begin the traversal from.</param>
+        /// <param name="predicate">Edge type filter.  Pass <see langword="default"/> to follow all edge types.</param>
         public Graph<T, TRelation> Successors<T>(IEnumerable<TNode> starts,
             TRelation predicate = default!)
             where T : TNode, IEquatable<T>
@@ -393,9 +429,13 @@ namespace Abodit.Mutable
         }
 
         /// <summary>
-        /// Find all the outgoing edges from a list of node with a given predicate and keep following edges of that type
-        /// match only nodes of type T. Return the results as a tree (can be flattened using SelectMany).
+        /// Traverses all outgoing edges reachable from each of <paramref name="starts"/> matching
+        /// the supplied edge condition and returns a sub-graph of nodes of type
+        /// <typeparamref name="T"/>.
         /// </summary>
+        /// <typeparam name="T">The node type to filter to.  Must be a sub-type of <typeparamref name="TNode"/>.</typeparam>
+        /// <param name="starts">The set of nodes to begin the traversal from.</param>
+        /// <param name="predicate">A condition on (startNode, relation, endNode) that must be satisfied for an edge to be followed.</param>
         public Graph<T, TRelation> Successors<T>(IEnumerable<TNode> starts,
             Func<TNode, TRelation, TNode, bool> predicate)
             where T : class, TNode, IEquatable<T>
@@ -437,9 +477,13 @@ namespace Abodit.Mutable
         }
 
         /// <summary>
-        /// Find all the incoming edges from a vertex with a given predicate (or null) and keep following edges of that type
-        /// match only nodes of type T. Return the results as a tree (can be flattened using SelectMany).
+        /// Traverses all incoming edges reachable backward from <paramref name="start"/> matching
+        /// the supplied edge condition and returns a sub-graph of nodes of type
+        /// <typeparamref name="T"/>.
         /// </summary>
+        /// <typeparam name="T">The node type to filter to.  Must be a sub-type of <typeparamref name="TNode"/>.</typeparam>
+        /// <param name="start">The node to begin the backward traversal from.</param>
+        /// <param name="predicate">A condition on (startNode, relation, endNode) that must be satisfied for an edge to be followed.</param>
         public Graph<T, TRelation> Predecessors<T>(TNode start,
             Func<TNode, TRelation, TNode, bool> predicate)
             where T : class, TNode, IEquatable<T>
@@ -450,9 +494,13 @@ namespace Abodit.Mutable
         }
 
         /// <summary>
-        /// Find all the incoming edges from a vertex with a given predicate (or null) and keep following edges of that type
-        /// match only nodes of type T. Return the results as a tree (can be flattened using SelectMany).
+        /// Traverses all incoming edges reachable backward from <paramref name="start"/> that
+        /// satisfy <paramref name="predicate"/> and returns a sub-graph of nodes of type
+        /// <typeparamref name="T"/>.
         /// </summary>
+        /// <typeparam name="T">The node type to filter to.  Must be a sub-type of <typeparamref name="TNode"/>.</typeparam>
+        /// <param name="start">The node to begin the backward traversal from.</param>
+        /// <param name="predicate">Edge type filter.  Pass <see langword="default"/> to follow all edge types.</param>
         public Graph<T, TRelation> Predecessors<T>(TNode start,
             TRelation predicate = default!)
             where T : class, TNode, IEquatable<T>
@@ -463,9 +511,13 @@ namespace Abodit.Mutable
         }
 
         /// <summary>
-        /// Find all the incoming edges from a list of nodes with a given predicate (or null) and keep following edges of that type
-        /// match only nodes of type T. Return the results as a tree (can be flattened using SelectMany).
+        /// Traverses all incoming edges reachable backward from each of <paramref name="starts"/>
+        /// matching the supplied edge condition and returns a sub-graph of nodes of type
+        /// <typeparamref name="T"/>.
         /// </summary>
+        /// <typeparam name="T">The node type to filter to.  Must be a sub-type of <typeparamref name="TNode"/>.</typeparam>
+        /// <param name="starts">The set of nodes to begin the backward traversal from.</param>
+        /// <param name="predicate">A condition on (startNode, relation, endNode) that must be satisfied for an edge to be followed.</param>
         public Graph<T, TRelation> Predecessors<T>(IEnumerable<TNode> starts,
             Func<TNode, TRelation, TNode, bool> predicate)
             where T : class, TNode, IEquatable<T>
@@ -479,9 +531,13 @@ namespace Abodit.Mutable
         }
 
         /// <summary>
-        /// Find all the incoming edges from a list of nodes with a given predicate and keep following edges of that type
-        /// match only nodes of type T. Return the results as a tree (can be flattened using SelectMany).
+        /// Traverses all incoming edges reachable backward from each of <paramref name="starts"/>
+        /// that satisfy <paramref name="predicate"/> and returns a sub-graph of nodes of type
+        /// <typeparamref name="T"/>.
         /// </summary>
+        /// <typeparam name="T">The node type to filter to.  Must be a sub-type of <typeparamref name="TNode"/>.</typeparam>
+        /// <param name="starts">The set of nodes to begin the backward traversal from.</param>
+        /// <param name="predicate">Edge type filter.  Pass <see langword="default"/> to follow all edge types.</param>
         public Graph<T, TRelation> Predecessors<T>(IEnumerable<TNode> starts,
             TRelation predicate = default!)
             where T : class, TNode, IEquatable<T>
@@ -552,24 +608,24 @@ namespace Abodit.Mutable
             TRelation newRelation)
         {
             var visited = new HashSet<TNode>();
-            //var active = new SortedSet<(TNode node, double probability)>(new FuncComparer((a, b) => a.probability.CompareTo(b.probability)); // TODO: Use SortedSet
-            var active = new List<(TNode node, TNode succ, double prior, double posterior)>();
+            // Max-heap: negate posterior so PriorityQueue (min-heap) returns the highest-probability item first
+            var queue = new PriorityQueue<(TNode node, TNode succ, double prior, double posterior), double>();
+
             foreach (var start in starts)
             {
                 foreach (var succ in Follow(start, predicate))
                 {
-                    active.Add((node: start, succ: succ.End, prior: 1.0, posterior: 1.0 * probabilityFunction(succ.Predicate)));
+                    double posterior = probabilityFunction(succ.Predicate);
+                    queue.Enqueue((node: start, succ: succ.End, prior: 1.0, posterior: posterior), -posterior);
                 }
             }
-            active = active.OrderByDescending(x => x.posterior).ToList();
 
             var result = new Graph<(TNode node, double probability), TRelation>();
 
-            while (active.Count > 0)
+            while (queue.Count > 0)
             {
-                // Pick the highest probability next
-                var current = active[0];
-                active.RemoveAt(0);
+                // Pick the highest probability next (lowest negated priority)
+                var current = queue.Dequeue();
 
                 if (visited.Contains(current.node)) continue;       // Prim/Kruskall
                 visited.Add(current.node);
@@ -581,12 +637,9 @@ namespace Abodit.Mutable
 
                 foreach (var succ in Follow(current.succ, predicate))
                 {
-                    active.Add((node: current.succ, succ: succ.End,
-                        prior: current.posterior,
-                        posterior: current.posterior * probabilityFunction(succ.Predicate)));
+                    double posterior = current.posterior * probabilityFunction(succ.Predicate);
+                    queue.Enqueue((node: current.succ, succ: succ.End, prior: current.posterior, posterior: posterior), -posterior);
                 }
-
-                active = active.OrderByDescending(x => x.posterior).ToList();
             }
             return result;
         }
