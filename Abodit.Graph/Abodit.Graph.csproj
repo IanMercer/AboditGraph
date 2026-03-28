@@ -12,7 +12,7 @@
   </PropertyGroup>
 
   <!-- This must come after the above so that it overwrites it -->
-  <Import Project="$(MSBuildThisFileDirectory)/../Shared.msbuild" />
+  <Import Project="$(MSBuildThisFileDirectory)/../shared.msbuild" />
 
   <!-- Embed PBD files until symbol server support is added -->
   <PropertyGroup>
